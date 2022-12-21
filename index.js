@@ -4,10 +4,21 @@ const xl = require('excel4node');
 
 const { URLMELI, APPKEY } = process.env;
 //we declare categories ids here 
-// MLA3502 <-- 'Accesorios para Celulares'
-const categoriesIds = ['MLA3502', 'MLA417704'];
+// MLA1051   <-- 'Celulares y telefonos'
+// MLA3502   <-- 'Accesorios para Celulares'
+// MLA434353 <-- 'Mallas'
+// MLA3517   <-- 'Cargadores'
+// MLA417718 <-- 'Protectores de Pantalla'
+// MLA1049   <-- 'Accesorios para Cámaras'
+// MLA3518   <-- 'Auriculares y Manos Libres'
+// MLA430918 <-- 'Cables y Hubs USB'
+// MLA3813   <-- 'Repuestos de Celulares'
+const categoriesIds = ['MLA1051', 'MLA3502', 'MLA434353', 'MLA3517', 'MLA417718', 'MLA1049', 'MLA3518', 'MLA430918', 'MLA3813'];
 
 async function init() {
+
+  console.log('++++++========+=========++++++');
+  console.log('WORKING');
 
   let results = [];
   let topSellItems = [];
@@ -25,10 +36,19 @@ async function init() {
     topSellItems.push(...responseTopSells.data.content.filter(i => i.type === 'ITEM'));
   };
 
-  const itemsInfo = await axios.get(`${URLMELI}/items?ids=${topSellItems.map(i => i.id).join(',')}`);
+  let itemsInfo = [];
 
-  for (let k = 0; k < itemsInfo.data.length; k++) {
-    const item = itemsInfo.data[k];
+  for (let j = 0; j < topSellItems.length / 19; j++) {
+
+    let sellSlice = topSellItems.slice(19 * j, (19 * j) + 19);
+
+    let resultItems = await axios.get(`${URLMELI}/items?ids=${sellSlice.map(i => i.id).join(',')}`);
+
+    itemsInfo.push(...resultItems.data);
+  }
+
+  for (let k = 0; k < itemsInfo.length; k++) {
+    const item = itemsInfo[k];
 
     const views = await axios.get(`${URLMELI}/visits/items?ids=${item.body.id}`, {
       headers: {
@@ -45,19 +65,20 @@ async function init() {
   saveToXls(results);
 }
 
+//BY chat GPT
 function saveToXls(data) {
   const XLSX = require('xlsx');
 
   // Create a workbook object
   const workbook = XLSX.utils.book_new();
-  
+
   sanitizeObject(data);
   // Convert the data array to a worksheet object
   const worksheet = XLSX.utils.json_to_sheet(data);
-  
+
   // Add the worksheet to the workbook
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-  
+
   // Write the workbook to a file
   XLSX.writeFile(workbook, 'data.xlsx');
 }
