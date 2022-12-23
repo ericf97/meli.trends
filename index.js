@@ -3,17 +3,22 @@ const axios = require('axios').default;
 const xl = require('excel4node');
 
 const { URLMELI, APPKEY } = process.env;
-//we declare categories ids here 
-// MLA1051   <-- 'Celulares y telefonos'
-// MLA3502   <-- 'Accesorios para Celulares'
-// MLA434353 <-- 'Mallas'
-// MLA3517   <-- 'Cargadores'
-// MLA417718 <-- 'Protectores de Pantalla'
-// MLA1049   <-- 'Accesorios para Cámaras'
-// MLA3518   <-- 'Auriculares y Manos Libres'
-// MLA430918 <-- 'Cables y Hubs USB'
-// MLA3813   <-- 'Repuestos de Celulares'
-const categoriesIds = ['MLA1051', 'MLA3502', 'MLA434353', 'MLA3517', 'MLA417718', 'MLA1049', 'MLA3518', 'MLA430918', 'MLA3813'];
+//we declare categories here 
+
+const categories = {
+  'MLA1051': 'Celulares y telefonos',
+  'MLA3502': 'Accesorios para Celulares',
+  'MLA434353': 'Mallas',
+  'MLA3517': 'Cargadores',
+  'MLA417718': 'Protectores de Pantalla',
+  'MLA1049': 'Accesorios para Cámaras',
+  'MLA3518': 'Auriculares y Manos Libres',
+  'MLA430918': 'Cables y Hubs USB',
+  'MLA3813': 'Repuestos de Celulares',
+  'MLA447778': 'Accesorios para PC Gaming',
+  'MLA3794': 'Componentes de PC',
+  'MLA1000': 'Electrónica, Audio y Video'
+};
 
 async function init() {
 
@@ -22,6 +27,8 @@ async function init() {
 
   let results = [];
   let topSellItems = [];
+
+  const categoriesIds = Object.keys(categories);
 
   for (let i = 0; i < categoriesIds.length; i++) {
 
@@ -50,13 +57,14 @@ async function init() {
   for (let k = 0; k < itemsInfo.length; k++) {
     const item = itemsInfo[k];
 
+    item.body.category = categories[item.body.category_id];
     const views = await axios.get(`${URLMELI}/visits/items?ids=${item.body.id}`, {
       headers: {
         'Authorization': `Bearer ${APPKEY}`
       }
     });
 
-    results.push({...item.body, visits: views.data});
+    results.push({...item.body, visits: views.data[item.body.id]});
   }
 
   console.log('++++++========+=========++++++');
